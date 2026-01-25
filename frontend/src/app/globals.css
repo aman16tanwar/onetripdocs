@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/**
+ * 🎓 MENTOR NOTE: CSS Custom Properties (Variables)
+ * -------------------------------------------------
+ * Using CSS variables allows us to:
+ * 1. Change colors in one place
+ * 2. Support dark mode easily
+ * 3. Create consistent design tokens
+ */
+
+:root {
+  /* Brand Colors */
+  --primary: #10b981;        /* Emerald - trust, success */
+  --primary-dark: #059669;
+  --secondary: #3b82f6;      /* Blue - information */
+  --accent: #f59e0b;         /* Amber - attention */
+  --danger: #ef4444;         /* Red - warnings */
+
+  /* Neutral Colors */
+  --background: #ffffff;
+  --foreground: #171717;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+
+  /* Spacing */
+  --section-padding: 5rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  /* Font is applied via Next.js className on body, not CSS variable */
+}
+
+/* Light mode only for now - cleaner for landing page */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  /* Font is inherited from className applied by Next.js layout */
+}
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom selection color */
+::selection {
+  background-color: var(--primary);
+  color: white;
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Animation utilities */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+/* Stagger children animations */
+.stagger-children > * {
+  opacity: 0;
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.5s; }

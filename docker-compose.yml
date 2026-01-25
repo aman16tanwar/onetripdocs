@@ -1,0 +1,104 @@
+# ========================================
+# OneTripDocs - Docker Compose
+# ========================================
+#
+# 🎓 MENTOR NOTE: Docker Compose for Local Development
+# ----------------------------------------------------
+# Docker Compose lets you run multiple containers as one unit:
+# - PostgreSQL database
+# - FastAPI backend
+# - Next.js frontend
+#
+# Benefits:
+# - Same environment for all developers
+# - No "works on my machine" issues
+# - Easy to start/stop everything
+#
+# Commands:
+#   docker-compose up        # Start all services
+#   docker-compose up -d     # Start in background (detached)
+#   docker-compose down      # Stop all services
+#   docker-compose logs -f   # View logs
+#   docker-compose build     # Rebuild images
+
+services:
+  # ========================================
+  # PostgreSQL Database
+  # ========================================
+  db:
+    image: postgres:16-alpine
+    container_name: onetripdocs-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: onetripdocs
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persist data between restarts
+      - postgres_data:/var/lib/postgresql/data
+      # Initialize database (optional)
+      # - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ========================================
+  # FastAPI Backend
+  # ========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: onetripdocs-backend
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/onetripdocs
+      - DEBUG=true
+      - ENVIRONMENT=development
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - CORS_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000"]
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount source code for hot reload
+      - ./backend/app:/app/app:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    # Override command for development (hot reload)
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # ========================================
+  # Next.js Frontend
+  # ========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development  # Use development stage for hot reload
+    container_name: onetripdocs-frontend
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source code for hot reload
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      # Prevent overwriting node_modules
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+
+# ========================================
+# Volumes
+# ========================================
+volumes:
+  postgres_data:
+    name: onetripdocs-postgres-data
